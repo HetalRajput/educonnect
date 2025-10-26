@@ -1,24 +1,72 @@
-const { registerValidation } = require('../utils/validation');
+const validateOrganizationRegistration = (req, res, next) => {
+  const { email, password, profile, organizationName, type, session } = req.body;
 
-const validateRegistration = (req, res, next) => {
-  console.log('Received registration data:', req.body);
-  console.log('Headers:', req.headers);
-  
-  const { error } = registerValidation(req.body);
-  
-  if (error) {
-    console.log('Validation error details:', error.details);
+  if (!email || !password || !organizationName || !type || !session) {
     return res.status(400).json({
       success: false,
-      message: error.details[0].message,
-      field: error.details[0].path[0], // Show which field has error
-      receivedData: req.body // Return what was actually received
+      message: 'Email, password, organization name, type and session are required'
     });
   }
-  
+
+  if (!profile?.firstName || !profile?.lastName) {
+    return res.status(400).json({
+      success: false,
+      message: 'First name and last name are required in profile'
+    });
+  }
+
+  if (!['school', 'college'].includes(type)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Organization type must be school or college'
+    });
+  }
+
+  next();
+};
+
+const validateStaffRegistration = (req, res, next) => {
+  const { email, password, profile, employeeId, department, designation, joiningDate, salary } = req.body;
+
+  if (!email || !password || !employeeId || !department || !designation || !joiningDate || !salary) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email, password, employeeId, department, designation, joiningDate and salary are required'
+    });
+  }
+
+  if (!profile?.firstName || !profile?.lastName) {
+    return res.status(400).json({
+      success: false,
+      message: 'First name and last name are required in profile'
+    });
+  }
+
+  next();
+};
+
+const validateStudentRegistration = (req, res, next) => {
+  const { email, password, profile, rollNumber, class: studentClass, section, admissionDate } = req.body;
+
+  if (!email || !password || !rollNumber || !studentClass || !section || !admissionDate) {
+    return res.status(400).json({
+      success: false,
+      message: 'Email, password, rollNumber, class, section and admissionDate are required'
+    });
+  }
+
+  if (!profile?.firstName || !profile?.lastName) {
+    return res.status(400).json({
+      success: false,
+      message: 'First name and last name are required in profile'
+    });
+  }
+
   next();
 };
 
 module.exports = {
-  validateRegistration
+  validateOrganizationRegistration,
+  validateStaffRegistration,
+  validateStudentRegistration
 };

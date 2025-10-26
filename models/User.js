@@ -7,8 +7,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
-    trim: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    trim: true
   },
   password: {
     type: String,
@@ -18,20 +17,34 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['organization', 'staff', 'student'],
-    required: [true, 'Role is required']
+    enum: ['admin', 'organization', 'staff', 'student'],
+    required: true
   },
   organization: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: function() {
-      return this.role === 'staff' || this.role === 'student';
+      return ['organization', 'staff', 'student'].includes(this.role);
     }
   },
   profile: {
-    firstName: String,
-    lastName: String,
-    phone: String
+    firstName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    phone: String,
+    address: String,
+    dateOfBirth: Date,
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other']
+    }
   },
   isActive: {
     type: Boolean,
@@ -44,14 +57,11 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Encrypt password before saving
+// Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
 });
 
 // Compare password method

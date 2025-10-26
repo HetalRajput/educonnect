@@ -1,4 +1,4 @@
-const { verifyToken } = require('../utils/jwt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const protect = async (req, res, next) => {
@@ -16,29 +16,20 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = verifyToken(token);
-    const user = await User.findById(decoded.id).select('-password');
-
-    if (!user) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).populate('organization');
+      next();
+    } catch (error) {
       return res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'Not authorized to access this route'
       });
     }
-
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'User account is deactivated'
-      });
-    }
-
-    req.user = user;
-    next();
   } catch (error) {
-    return res.status(401).json({
+    res.status(500).json({
       success: false,
-      message: 'Not authorized to access this route'
+      message: 'Server error in authentication'
     });
   }
 };
@@ -55,7 +46,4 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = {
-  protect,
-  authorize
-};
+module.exports = { protect, authorize };

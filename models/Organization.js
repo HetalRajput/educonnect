@@ -17,12 +17,44 @@ const organizationSchema = new mongoose.Schema({
     required: [true, 'Session is required'],
     trim: true
   },
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
+  },
+  contact: {
+    phone: String,
+    email: String
+  },
+  settings: {
+    academicYear: String,
+    maxStudents: Number,
+    maxStaff: Number
+  },
   isActive: {
     type: Boolean,
     default: true
   }
 }, {
   timestamps: true
+});
+
+// Virtual for staff count
+organizationSchema.virtual('staffCount', {
+  ref: 'Staff',
+  localField: '_id',
+  foreignField: 'organization',
+  count: true
+});
+
+// Virtual for student count
+organizationSchema.virtual('studentCount', {
+  ref: 'Student',
+  localField: '_id',
+  foreignField: 'organization',
+  count: true
 });
 
 module.exports = mongoose.model('Organization', organizationSchema);
