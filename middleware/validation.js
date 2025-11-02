@@ -41,19 +41,28 @@ const validateStaffRegistration = (req, res, next) => {
 };
 
 const validateStudentRegistration = (req, res, next) => {
-  const { email, password, profile, rollNumber, class: studentClass, section, admissionDate } = req.body;
+  const { name, fatherName, class: studentClass, section, session, mobileNumber, organizationId } = req.body;
 
-  if (!email || !password || !rollNumber || !studentClass || !section || !admissionDate) {
+  if (!name || !fatherName || !studentClass || !section || !session || !mobileNumber || !organizationId) {
     return res.status(400).json({
       success: false,
-      message: 'Email, password, rollNumber, class, section and admissionDate are required'
+      message: 'Name, father name, class, section, session, mobile number and organization ID are required'
     });
   }
 
-  if (!profile?.firstName || !profile?.lastName) {
+  // Validate organization ID format
+  if (!mongoose.Types.ObjectId.isValid(organizationId)) {
     return res.status(400).json({
       success: false,
-      message: 'First name and last name are required in profile'
+      message: 'Invalid organization ID format'
+    });
+  }
+
+  // Validate mobile number format (basic validation)
+  if (mobileNumber.length < 10) {
+    return res.status(400).json({
+      success: false,
+      message: 'Mobile number must be at least 10 digits'
     });
   }
 

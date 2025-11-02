@@ -20,6 +20,8 @@ const router = express.Router();
 // Public routes
 router.post('/register/organization', registerOrganization);
 router.get('/organizations', getAllOrganizations); // Get all organizations with IDs
+router.post('/register/student',registerStudent);
+
 
 // Login routes
 router.post('/login/organization', loginOrganization);
@@ -28,6 +30,5 @@ router.post('/login/student', loginStudent);
 
 // Protected routes - only organization can register staff/students
 router.post('/register/staff', protect, authorize('organization'), validateStaffRegistration, registerStaff);
-router.post('/register/student', protect, authorize('organization'), validateStudentRegistration, registerStudent);
 
 module.exports = router;

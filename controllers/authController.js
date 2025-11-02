@@ -125,88 +125,72 @@ const loginStaff = async (req, res) => {
 // Student Login with Organization ID
 const loginStudent = async (req, res) => {
   try {
-    const { email, password, organizationId } = req.body;
+    const { organizationId, mobileNumber } = req.body;
 
-    if (!email || !password || !organizationId) {
+    if (!organizationId || !mobileNumber) {
       return res.status(400).json({
         success: false,
-        message: 'Email, password and organization ID are required'
+        message: 'Organization ID and mobile number are required'
       });
     }
 
     // Debug: Log the search criteria
     console.log('Searching for student:', {
-      email: email.toLowerCase().trim(),
       organization: organizationId,
-      role: 'student'
+      mobileNumber: mobileNumber.trim()
     });
 
-    // Find student user by email and organization
-    const user = await User.findOne({ 
-      email: email.toLowerCase().trim(), // Normalize email
+    // Find student by organization and mobile number directly in Student collection
+    const student = await Student.findOne({ 
       organization: organizationId,
-      role: 'student'
-    })
-    .select('+password')
-    .populate('organization');
+      mobileNumber: mobileNumber.trim()
+    });
 
-    console.log('Found user:', user); // Debug: See if user is found
+    console.log('Found student:', student); // Debug: See if student is found
 
-    if (!user) {
-      // Additional debug: Check if any user exists with this email
-      const anyUser = await User.findOne({ 
-        email: email.toLowerCase().trim()
+    if (!student) {
+      // Additional debug: Check if any student exists with this mobile number
+      const anyStudent = await Student.findOne({ 
+        mobileNumber: mobileNumber.trim()
       });
-      console.log('Any user with this email:', anyUser);
+      console.log('Any student with this mobile number:', anyStudent);
       
       return res.status(401).json({
         success: false,
-        message: 'No student account found with this email in the selected organization'
+        message: 'No student found with this mobile number in the selected organization'
       });
     }
 
-    // Rest of your code remains the same...
-    // Check password
-    const isPasswordMatch = await user.matchPassword(password);
-    if (!isPasswordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    if (!user.isActive) {
+    // Check if student is active
+    if (!student.isActive) {
       return res.status(401).json({
         success: false,
         message: 'Student account is deactivated. Please contact your organization.'
       });
     }
 
-    const token = generateToken(user._id);
+    // Generate token (using student ID instead of user ID)
+    const token = generateToken(student._id);
 
-    user.lastLogin = new Date();
-    await user.save();
-
-    const studentProfile = await Student.findOne({ user: user._id });
+    // Update last login
+    student.lastLogin = new Date();
+    await student.save();
 
     res.json({
       success: true,
       message: 'Student login successful',
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-          profile: user.profile,
-          organization: {
-            id: user.organization._id,
-            name: user.organization.name,
-            type: user.organization.type,
-            session: user.organization.session
-          },
-          studentProfile: studentProfile,
-          lastLogin: user.lastLogin
+        student: {
+          id: student._id,
+          name: student.name,
+          fatherName: student.fatherName,
+          class: student.class,
+          section: student.section,
+          session: student.session,
+          mobileNumber: student.mobileNumber,
+          organization: organizationId,
+          lastLogin: student.lastLogin
         }
       }
     });
@@ -470,77 +454,70 @@ const registerStaff = async (req, res) => {
 const registerStudent = async (req, res) => {
   try {
     const { 
-      email, password, profile,
-      rollNumber, class: studentClass, section,
-      admissionDate, parentInfo, emergencyContact,
-      bloodGroup, medicalInfo
+      name,
+      fatherName,
+      class: studentClass,
+      section,
+      session,
+      mobileNumber,
+      organizationId
     } = req.body;
 
-    const organizationId = req.user.organization._id;
-
-    // Check if student already exists in this organization
-    const existingUser = await User.findOne({ email, organization: organizationId });
-    if (existingUser) {
+    // Check if organization exists
+    const organization = await Organization.findById(organizationId);
+    if (!organization) {
       return res.status(400).json({
         success: false,
-        message: 'Student with this email already exists in your organization'
+        message: 'Organization not found'
       });
     }
 
-    // Check if rollNumber already exists in this organization
+    // Check if student with same name and father name already exists in this organization
     const existingStudent = await Student.findOne({ 
       organization: organizationId, 
-      rollNumber 
+      name,
+      fatherName 
     });
     if (existingStudent) {
       return res.status(400).json({
         success: false,
-        message: 'Student with this roll number already exists in your organization'
+        message: 'Student with this name and father name already exists in this organization'
       });
     }
 
-    // Create user with student role
-    const user = await User.create({
-      email,
-      password,
-      role: 'student',
-      organization: organizationId,
-      profile
-    });
+    // Check if mobile number already exists (globally unique)
+    const existingMobile = await Student.findOne({ mobileNumber });
+    if (existingMobile) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student with this mobile number already exists'
+      });
+    }
 
     // Create student profile
     const student = await Student.create({
-      user: user._id,
       organization: organizationId,
-      rollNumber,
+      name,
+      fatherName,
       class: studentClass,
       section,
-      admissionDate,
-      parentInfo,
-      emergencyContact,
-      bloodGroup,
-      medicalInfo
+      session,
+      mobileNumber
     });
 
     res.status(201).json({
       success: true,
       message: 'Student registered successfully',
       data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          role: 'student',
-          profile: user.profile,
-          organization: {
-            id: organizationId,
-            name: req.user.organization.name
-          },
-          studentProfile: {
-            id: student._id,
-            rollNumber: student.rollNumber,
-            class: student.class,
-            section: student.section
-          }
+        student: {
+          id: student._id,
+          name: student.name,
+          fatherName: student.fatherName,
+          class: student.class,
+          section: student.section,
+          session: student.session,
+          mobileNumber: student.mobileNumber,
+          organization: organizationId
         }
       }
     });
@@ -548,11 +525,14 @@ const registerStudent = async (req, res) => {
   } catch (error) {
     console.error('Student registration error:', error);
     
-    // Cleanup if user was created but student creation failed
-    if (req.body.email) {
-      await User.findOneAndDelete({ email: req.body.email, organization: req.user.organization._id });
+    // Handle duplicate mobile number error
+    if (error.code === 11000 && error.keyPattern.mobileNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student with this mobile number already exists'
+      });
     }
-
+    
     res.status(500).json({
       success: false,
       message: 'Server error during student registration',

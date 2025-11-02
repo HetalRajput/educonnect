@@ -1,53 +1,59 @@
 const mongoose = require('mongoose');
 
 const studentSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
-  },
   organization: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: true
   },
-  rollNumber: {
+  name: {
     type: String,
-    required: true
+    required: [true, 'Student name is required'],
+    trim: true
+  },
+  fatherName: {
+    type: String,
+    required: [true, 'Father name is required'],
+    trim: true
   },
   class: {
     type: String,
-    required: true
+    required: [true, 'Class is required']
   },
   section: {
     type: String,
-    required: true
+    required: [true, 'Section is required']
   },
-  admissionDate: {
-    type: Date,
-    required: true
+  session: {
+    type: String,
+    required: [true, 'Session is required']
   },
-  parentInfo: {
-    fatherName: String,
-    motherName: String,
-    fatherOccupation: String,
-    motherOccupation: String,
-    parentPhone: String,
-    parentEmail: String
+  mobileNumber: {
+    type: String,
+    required: [true, 'Mobile number is required'],
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return /^\d{10,}$/.test(v); // At least 10 digits
+      },
+      message: 'Mobile number must be at least 10 digits'
+    }
   },
-  emergencyContact: String,
-  bloodGroup: String,
-  medicalInfo: String,
   isActive: {
     type: Boolean,
     default: true
+  },
+  lastLogin: {
+    type: Date
   }
 }, {
   timestamps: true
 });
 
-// Compound index to ensure rollNumber is unique within organization
-studentSchema.index({ organization: 1, rollNumber: 1 }, { unique: true });
+// Compound index to ensure unique student within organization
+studentSchema.index({ organization: 1, name: 1, fatherName: 1 }, { unique: true });
+
+// Compound index to ensure mobile number is unique within organization
+studentSchema.index({ organization: 1, mobileNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model('Student', studentSchema);
