@@ -18,7 +18,7 @@ const { protect, authorize } = require('../middleware/auth');
 const router = express.Router();
 
 // Public routes
-router.post('/register/organization', validateOrganizationRegistration, registerOrganization);
+router.post('/register/organization', registerOrganization);
 router.get('/organizations', getAllOrganizations); // Get all organizations with IDs
 
 // Login routes

@@ -301,7 +301,7 @@ const loginOrganization = async (req, res) => {
 // Register Organization
 const registerOrganization = async (req, res) => {
   try {
-    const { email, password, profile, organizationName, type, session, address, contact, settings } = req.body;
+    const { email, password, organizationName, type, session, address, contact, settings } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -322,13 +322,13 @@ const registerOrganization = async (req, res) => {
       settings
     });
 
-    // Create user with organization role
+    // Create user with organization role - without profile
     const user = await User.create({
       email,
       password,
       role: 'organization',
-      organization: organization._id,
-      profile
+      organization: organization._id
+      // Profile section removed
     });
 
     const token = generateToken(user._id);
@@ -345,7 +345,6 @@ const registerOrganization = async (req, res) => {
           id: user._id,
           email: user.email,
           role: user.role,
-          profile: user.profile,
           organization: {
             id: organization._id,
             name: organization.name,
@@ -355,7 +354,6 @@ const registerOrganization = async (req, res) => {
         }
       }
     });
-
   } catch (error) {
     console.error('Organization registration error:', error);
     

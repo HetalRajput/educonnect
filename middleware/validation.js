@@ -1,5 +1,5 @@
 const validateOrganizationRegistration = (req, res, next) => {
-  const { email, password, profile, organizationName, type, session } = req.body;
+  const { email, password, organizationName, type, session } = req.body;
 
   if (!email || !password || !organizationName || !type || !session) {
     return res.status(400).json({
@@ -8,12 +8,7 @@ const validateOrganizationRegistration = (req, res, next) => {
     });
   }
 
-  if (!profile?.firstName || !profile?.lastName) {
-    return res.status(400).json({
-      success: false,
-      message: 'First name and last name are required in profile'
-    });
-  }
+  // Removed profile validation for organization registration
 
   if (!['school', 'college'].includes(type)) {
     return res.status(400).json({

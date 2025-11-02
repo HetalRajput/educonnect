@@ -30,12 +30,10 @@ const userSchema = new mongoose.Schema({
   profile: {
     firstName: {
       type: String,
-      required: true,
       trim: true
     },
     lastName: {
       type: String,
-      required: true,
       trim: true
     },
     phone: String,
