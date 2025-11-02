@@ -8,13 +8,19 @@ const { generateToken } = require('../utils/jwt');
 const getAllOrganizations = async (req, res) => {
   try {
     const organizations = await Organization.find({ isActive: true })
-      .select('_id name type session')
+      .select('_id name type session contact')
       .sort({ name: 1 });
 
     res.json({
       success: true,
       data: {
-        organizations,
+        organizations: organizations.map(org => ({
+          id: org._id,
+          name: org.name,
+          type: org.type,
+          session: org.session,
+          
+        })),
         count: organizations.length
       }
     });
