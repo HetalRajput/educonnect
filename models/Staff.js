@@ -1,50 +1,54 @@
 const mongoose = require('mongoose');
 
 const staffSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
-  },
   organization: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
     required: true
   },
-  employeeId: {
+  mobile_no: {
     type: String,
-    required: true
+    required: [true, 'Mobile number is required'],
+    unique: true,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        return /^\d{10,}$/.test(v);
+      },
+      message: 'Mobile number must be at least 10 digits'
+    }
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  fName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true
   },
   department: {
     type: String,
-    required: true
+    required: [true, 'Department is required'],
+    trim: true
   },
   designation: {
     type: String,
-    required: true
+    required: [true, 'Designation is required'],
+    trim: true
   },
-  joiningDate: {
-    type: Date,
-    required: true
-  },
-  salary: {
-    type: Number,
-    required: true
-  },
-  qualifications: [String],
-  experience: Number,
-  subjects: [String],
-  classes: [String],
   isActive: {
     type: Boolean,
     default: true
+  },
+  lastLogin: {
+    type: Date
   }
 }, {
   timestamps: true
 });
-
-// Compound index to ensure employeeId is unique within organization
-staffSchema.index({ organization: 1, employeeId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Staff', staffSchema);

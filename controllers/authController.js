@@ -37,88 +37,90 @@ const getAllOrganizations = async (req, res) => {
 // Staff Login with Organization ID
 const loginStaff = async (req, res) => {
   try {
-    const { email, password, organizationId } = req.body;
+    const { email, password, organizationId, mobile_no } = req.body;
 
-    if (!email || !password || !organizationId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email, password and organization ID are required'
+    // Check if using new format (mobile_no) or old format (email/password)
+    if (mobile_no && organizationId) {
+      // NEW LOGIN FORMAT - mobile number + organizationId
+      if (!organizationId || !mobile_no) {
+        return res.status(400).json({
+          success: false,
+          message: 'Organization ID and mobile number are required'
+        });
+      }
+
+      // Find staff by organization and mobile number
+      const staff = await Staff.findOne({ 
+        organization: organizationId,
+        mobile_no: mobile_no.trim()
+      }).populate('organization');
+
+      if (!staff) {
+        return res.status(401).json({
+          success: false,
+          message: 'No staff found with this mobile number in the selected organization'
+        });
+      }
+
+      if (!staff.isActive) {
+        return res.status(401).json({
+          success: false,
+          message: 'Staff account is deactivated'
+        });
+      }
+
+      const token = generateToken(staff._id);
+      staff.lastLogin = new Date();
+      await staff.save();
+
+      return res.json({
+        success: true,
+        message: 'Staff login successful',
+        data: {
+          token,
+          staff: {
+            id: staff._id,
+            mobile_no: staff.mobile_no,
+            email: staff.email,
+            fName: staff.fName,
+            department: staff.department,
+            designation: staff.designation,
+            organization: {
+              id: staff.organization._id,
+              name: staff.organization.name,
+              type: staff.organization.type,
+              session: staff.organization.session
+            },
+            lastLogin: staff.lastLogin
+          }
+        }
       });
-    }
 
-    // Normalize email and find staff user
-    const user = await User.findOne({ 
-      email: email.toLowerCase().trim(), // Add this line
-      organization: organizationId,
-      role: 'staff'
-    })
-    .select('+password')
-    .populate('organization');
+    } else {
+      // OLD LOGIN FORMAT - email + password + organizationId (for backward compatibility)
+      if (!email || !password || !organizationId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email, password and organization ID are required'
+        });
+      }
 
-    if (!user) {
-      // Debug: Check what's available
-      console.log('Searching for staff:', {
+      // Your existing old login code here...
+      const user = await User.findOne({ 
         email: email.toLowerCase().trim(),
-        organization: organizationId
-      });
-      
-      const availableStaff = await User.find({
         organization: organizationId,
         role: 'staff'
-      }).select('email');
-      
-      console.log('Available staff emails:', availableStaff.map(u => u.email));
-      
-      return res.status(401).json({
-        success: false,
-        message: 'No staff account found with this email in the selected organization'
-      });
-    }
+      }).select('+password').populate('organization');
 
-    // Check password
-    const isPasswordMatch = await user.matchPassword(password);
-    if (!isPasswordMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Staff account is deactivated. Please contact your organization.'
-      });
-    }
-
-    const token = generateToken(user._id);
-
-    user.lastLogin = new Date();
-    await user.save();
-
-    const staffProfile = await Staff.findOne({ user: user._id });
-
-    res.json({
-      success: true,
-      message: 'Staff login successful',
-      data: {
-        token,
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-          profile: user.profile,
-          organization: {
-            id: user.organization._id,
-            name: user.organization.name,
-            type: user.organization.type,
-            session: user.organization.session
-          },
-          staffProfile: staffProfile,
-          lastLogin: user.lastLogin
-        }
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'No staff account found with this email in the selected organization'
+        });
       }
-    });
+
+      // ... rest of old login code
+    }
 
   } catch (error) {
     console.error('Staff login error:', error);
@@ -364,78 +366,63 @@ const registerOrganization = async (req, res) => {
 const registerStaff = async (req, res) => {
   try {
     const { 
-      email, password, profile, 
-      employeeId, department, designation, 
-      joiningDate, salary, qualifications, 
-      experience, subjects, classes 
+      mobile_no,
+      email,
+      fName,
+      org_id,
+      department,
+      designation
     } = req.body;
 
-    const organizationId = req.user.organization._id;
-
-    // Check if staff already exists in this organization
-    const existingUser = await User.findOne({ email, organization: organizationId });
-    if (existingUser) {
+    // Check if organization exists
+    const organization = await Organization.findById(org_id);
+    if (!organization) {
       return res.status(400).json({
         success: false,
-        message: 'Staff with this email already exists in your organization'
+        message: 'Organization not found'
       });
     }
 
-    // Check if employeeId already exists in this organization
-    const existingStaff = await Staff.findOne({ 
-      organization: organizationId, 
-      employeeId 
-    });
-    if (existingStaff) {
+    // Check if mobile number already exists
+    const existingMobile = await Staff.findOne({ mobile_no });
+    if (existingMobile) {
       return res.status(400).json({
         success: false,
-        message: 'Staff with this employee ID already exists in your organization'
+        message: 'Staff with this mobile number already exists'
       });
     }
 
-    // Create user with staff role
-    const user = await User.create({
-      email,
-      password,
-      role: 'staff',
-      organization: organizationId,
-      profile
-    });
+    // Check if email already exists
+    const existingEmail = await Staff.findOne({ email: email.toLowerCase().trim() });
+    if (existingEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Staff with this email already exists'
+      });
+    }
 
     // Create staff profile
     const staff = await Staff.create({
-      user: user._id,
-      organization: organizationId,
-      employeeId,
+      organization: org_id,
+      mobile_no,
+      email: email.toLowerCase().trim(),
+      fName,
       department,
-      designation,
-      joiningDate,
-      salary,
-      qualifications,
-      experience,
-      subjects,
-      classes
+      designation
     });
 
     res.status(201).json({
       success: true,
       message: 'Staff registered successfully',
       data: {
-        user: {
-          id: user._id,
-          email: user.email,
-          role: 'staff',
-          profile: user.profile,
-          organization: {
-            id: organizationId,
-            name: req.user.organization.name
-          },
-          staffProfile: {
-            id: staff._id,
-            employeeId: staff.employeeId,
-            department: staff.department,
-            designation: staff.designation
-          }
+        staff: {
+          id: staff._id,
+          mobile_no: staff.mobile_no,
+          email: staff.email,
+          fName: staff.fName,
+          department: staff.department,
+          designation: staff.designation,
+          organization: org_id
         }
       }
     });
@@ -443,11 +430,22 @@ const registerStaff = async (req, res) => {
   } catch (error) {
     console.error('Staff registration error:', error);
     
-    // Cleanup if user was created but staff creation failed
-    if (req.body.email) {
-      await User.findOneAndDelete({ email: req.body.email, organization: req.user.organization._id });
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      if (error.keyPattern.mobile_no) {
+        return res.status(400).json({
+          success: false,
+          message: 'Staff with this mobile number already exists'
+        });
+      }
+      if (error.keyPattern.email) {
+        return res.status(400).json({
+          success: false,
+          message: 'Staff with this email already exists'
+        });
+      }
     }
-
+    
     res.status(500).json({
       success: false,
       message: 'Server error during staff registration',

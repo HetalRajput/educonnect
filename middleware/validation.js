@@ -21,19 +21,37 @@ const validateOrganizationRegistration = (req, res, next) => {
 };
 
 const validateStaffRegistration = (req, res, next) => {
-  const { email, password, profile, employeeId, department, designation, joiningDate, salary } = req.body;
+  const { mobile_no, email, fName, org_id, department, designation } = req.body;
 
-  if (!email || !password || !employeeId || !department || !designation || !joiningDate || !salary) {
+  if (!mobile_no || !email || !fName || !org_id || !department || !designation) {
     return res.status(400).json({
       success: false,
-      message: 'Email, password, employeeId, department, designation, joiningDate and salary are required'
+      message: 'Mobile number, email, first name, organization ID, department and designation are required'
     });
   }
 
-  if (!profile?.firstName || !profile?.lastName) {
+  // Validate organization ID format
+  if (!mongoose.Types.ObjectId.isValid(org_id)) {
     return res.status(400).json({
       success: false,
-      message: 'First name and last name are required in profile'
+      message: 'Invalid organization ID format'
+    });
+  }
+
+  // Validate mobile number format
+  if (!/^\d{10,}$/.test(mobile_no)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Mobile number must be at least 10 digits and contain only numbers'
+    });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid email format'
     });
   }
 

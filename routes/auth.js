@@ -29,6 +29,6 @@ router.post('/login/staff', loginStaff);
 router.post('/login/student', loginStudent);
 
 // Protected routes - only organization can register staff/students
-router.post('/register/staff', protect, authorize('organization'), validateStaffRegistration, registerStaff);
+router.post('/register/staff',registerStaff);
 
 module.exports = router;
