@@ -44,8 +44,8 @@ const getOrganizationStaff = async (req, res) => {
     let query = { organization: req.user.organization._id };
     if (department) query.department = department;
 
+    // Remove populate since Staff doesn't have user field
     const staff = await Staff.find(query)
-      .populate('user', 'profile email lastLogin isActive')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -57,7 +57,7 @@ const getOrganizationStaff = async (req, res) => {
       data: {
         staff,
         totalPages: Math.ceil(total / limit),
-        currentPage: page,
+        currentPage: parseInt(page),
         total
       }
     });

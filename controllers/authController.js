@@ -15,7 +15,7 @@ const getAllOrganizations = async (req, res) => {
       success: true,
       data: {
         organizations: organizations.map(org => ({
-          id: org._id,
+          org_id: org._id,
           name: org.name,
           type: org.type,
           session: org.session,
