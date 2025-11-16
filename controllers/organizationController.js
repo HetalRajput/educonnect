@@ -39,16 +39,32 @@ const getOrganizationDashboard = async (req, res) => {
 // Get all staff in organization
 const getOrganizationStaff = async (req, res) => {
   try {
-    const { page = 1, limit = 10, department } = req.query;
+    const { page = 1, limit = 10, department, search } = req.query;
     
+    // Build query
     let query = { organization: req.user.organization._id };
-    if (department) query.department = department;
+    
+    if (department && department !== 'all') {
+      query.department = department;
+    }
+    
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { fName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { mobile_no: { $regex: search, $options: 'i' } },
+        { designation: { $regex: search, $options: 'i' } }
+      ];
+    }
 
-    // Remove populate since Staff doesn't have user field
+    // Get staff with pagination
     const staff = await Staff.find(query)
+      .select('-__v') // Exclude version key
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean(); // Better performance
 
     const total = await Staff.countDocuments(query);
 
@@ -56,9 +72,13 @@ const getOrganizationStaff = async (req, res) => {
       success: true,
       data: {
         staff,
-        totalPages: Math.ceil(total / limit),
-        currentPage: parseInt(page),
-        total
+        pagination: {
+          totalPages: Math.ceil(total / limit),
+          currentPage: parseInt(page),
+          total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1
+        }
       }
     });
 
