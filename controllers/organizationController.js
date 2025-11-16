@@ -94,35 +94,66 @@ const getOrganizationStaff = async (req, res) => {
 // Get all students in organization
 const getOrganizationStudents = async (req, res) => {
   try {
-    const { page = 1, limit = 10, class: studentClass, section } = req.query;
+    const { page = 1, limit = 10, class: studentClass, section, search } = req.query;
+    
+    console.log('Fetching students for organization:', req.user.organization._id);
     
     let query = { organization: req.user.organization._id };
-    if (studentClass) query.class = studentClass;
-    if (section) query.section = section;
+    
+    // Add filters
+    if (studentClass && studentClass !== 'all') {
+      query.class = studentClass;
+    }
+    if (section && section !== 'all') {
+      query.section = section;
+    }
+    
+    // Add search functionality
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { fatherName: { $regex: search, $options: 'i' } },
+        { mobileNumber: { $regex: search, $options: 'i' } },
+        { class: { $regex: search, $options: 'i' } },
+        { section: { $regex: search, $options: 'i' } }
+      ];
+    }
 
+    // Get students without populate
     const students = await Student.find(query)
-      .populate('user', 'profile email lastLogin isActive')
+      .select('-__v')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean(); // Better performance
 
     const total = await Student.countDocuments(query);
+
+    console.log(`Found ${students.length} students out of ${total} total`);
 
     res.json({
       success: true,
       data: {
         students,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        total
+        pagination: {
+          totalPages: Math.ceil(total / limit),
+          currentPage: parseInt(page),
+          total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1
+        }
       }
     });
 
   } catch (error) {
-    console.error('Get students error:', error);
+    console.error('Get students error details:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching students'
+      message: 'Server error while fetching students',
+      ...(process.env.NODE_ENV === 'development' && { 
+        error: error.message,
+        stack: error.stack 
+      })
     });
   }
 };

@@ -4,7 +4,8 @@ const messageSchema = new mongoose.Schema({
   organization: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Organization',
-    required: true
+    required: true,
+    index: true
   },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
@@ -13,33 +14,46 @@ const messageSchema = new mongoose.Schema({
   },
   title: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Message title is required'],
+    trim: true,
+    maxlength: [200, 'Title cannot exceed 200 characters']
   },
   content: {
     type: String,
-    required: true
+    required: [true, 'Message content is required'],
+    trim: true
   },
+  recipients: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }],
   recipientType: {
     type: String,
     enum: ['all', 'staff', 'students', 'specific'],
-    default: 'all'
+    required: true
   },
-  specificRecipients: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
   priority: {
     type: String,
-    enum: ['low', 'medium', 'high'],
-    default: 'medium'
+    enum: ['low', 'normal', 'high', 'urgent'],
+    default: 'normal'
   },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
+  isRead: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    readAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });
+
+// Index for better performance
+messageSchema.index({ organization: 1, createdAt: -1 });
+messageSchema.index({ recipients: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Message', messageSchema);
