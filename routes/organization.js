@@ -5,6 +5,8 @@ const {
   getOrganizationStudents,
   updateOrganization
 } = require('../controllers/organizationController');
+
+const { addCourse, getCourse } = require('../controllers/courseController');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -18,5 +20,8 @@ router.get('/dashboard', getOrganizationDashboard);
 router.get('/staff', getOrganizationStaff);
 router.get('/students', getOrganizationStudents);
 router.put('/profile', updateOrganization);
+
+router.post('/courseAdd', addCourse);
+router.post('/courseList', getCourse);
 
 module.exports = router;
