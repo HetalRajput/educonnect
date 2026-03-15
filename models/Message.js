@@ -7,11 +7,6 @@ const messageSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  sender: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
   title: {
     type: String,
     required: [true, 'Message title is required'],
@@ -23,31 +18,23 @@ const messageSchema = new mongoose.Schema({
     required: [true, 'Message content is required'],
     trim: true
   },
-  recipients: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  }],
-  recipientType: {
+  session: {
     type: String,
-    enum: ['all', 'staff', 'students', 'specific'],
+    required: [true, 'Session is required']
+  },
+  userType: {
+    type: String,
+    enum: ['staff', 'students'],
     required: true
   },
-  priority: {
+  class_id: {
     type: String,
-    enum: ['low', 'normal', 'high', 'urgent'],
-    default: 'normal'
+    required: false
   },
-  isRead: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    readAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
+  staff_id: {
+    type: String,
+    required: false
+  }
 }, {
   timestamps: true
 });
