@@ -43,7 +43,7 @@ const sendMessage = async (req, res) => {
 };
 const getStaffMessages = async (req, res) => {
   try{
-    const { staff_id } = req.body;
+    const { staff_id } = req.query;
     
     const messages = await messageModel.find({ staff_id: staff_id, userType: 'staff' }).sort({ createdAt: -1 });
     res.status(200).json({
@@ -62,7 +62,7 @@ const getStaffMessages = async (req, res) => {
 
 const getStudentMessages = async (req, res) => {
   try{
-    const { class_id } = req.body;
+    const { class_id } = req.query;
     
     const messages = await messageModel.find({ class_id: class_id, userType: 'students' }).sort({ createdAt: -1 });
     res.status(200).json({
