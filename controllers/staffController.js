@@ -4,9 +4,8 @@ const Message = require('../models/Message');
 // Get staff profile
 const getStaffProfile = async (req, res) => {
   try {
-    const staff = await Staff.findOne({ user: req.user._id })
-      .populate('user', 'email profile lastLogin')
-      .populate('organization', 'name type session');
+    
+    const staff = await Staff.findById(req.user._id );
 
     if (!staff) {
       return res.status(404).json({

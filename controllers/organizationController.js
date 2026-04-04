@@ -184,9 +184,35 @@ const updateOrganization = async (req, res) => {
   }
 };
 
+const getOrganizationProfile = async (req, res) => {
+  try {
+    const organization = await Organization.findOne({ _id: req.user.organization._id });
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: 'Organization profile not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { organization }
+    });
+
+  } catch (error) {
+    console.error('Get organization profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching organization profile'
+    });
+  }
+};
+
 module.exports = {
   getOrganizationDashboard,
   getOrganizationStaff,
   getOrganizationStudents,
-  updateOrganization
+  updateOrganization,
+  getOrganizationProfile
 };

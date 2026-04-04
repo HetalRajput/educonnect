@@ -3,7 +3,8 @@ const {
   getOrganizationDashboard,
   getOrganizationStaff,
   getOrganizationStudents,
-  updateOrganization
+  updateOrganization,
+  getOrganizationProfile
 } = require('../controllers/organizationController');
 
 const { addCourse, getCourse } = require('../controllers/courseController');
@@ -23,5 +24,6 @@ router.put('/profile', updateOrganization);
 
 router.post('/courseAdd', addCourse);
 router.post('/courseList', getCourse);
+router.get('/profile', getOrganizationProfile);
 
 module.exports = router;

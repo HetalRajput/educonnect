@@ -4,17 +4,15 @@ const Message = require('../models/Message');
 // Get student profile
 const getStudentProfile = async (req, res) => {
   try {
-    const student = await Student.findOne({ user: req.user._id })
-      .populate('user', 'email profile lastLogin')
-      .populate('organization', 'name type session');
-
+  
+    const student = await Student.findById(req.user._id);
     if (!student) {
       return res.status(404).json({
         success: false,
         message: 'Student profile not found'
       });
     }
-
+  
     res.json({
       success: true,
       data: { student }
