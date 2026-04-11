@@ -6,7 +6,8 @@ const {
   loginStaff,
   loginStudent,
   loginOrganization,
-  getAllOrganizations
+  getAllOrganizations,
+  loginAdmin
 } = require('../controllers/authController');
 const { 
   validateOrganizationRegistration, 
@@ -30,5 +31,6 @@ router.post('/login/student', loginStudent);
 
 // Protected routes - only organization can register staff/students
 router.post('/register/staff',registerStaff);
+router.post('/login/admin', loginAdmin);
 
 module.exports = router;

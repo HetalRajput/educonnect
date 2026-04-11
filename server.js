@@ -15,7 +15,7 @@ app.use('/api/organization', require('./routes/organization'));
 app.use('/api/staff', require('./routes/staff'));
 app.use('/api/student', require('./routes/student'));
 app.use('/api/messages', require('./routes/messages'));
-
+app.use('/api/users', require('./routes/users'));
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/school-management', {
   useNewUrlParser: true,

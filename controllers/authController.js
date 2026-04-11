@@ -545,12 +545,75 @@ const registerStudent = async (req, res) => {
   }
 };
 
+const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
+      });
+    }
+
+    // Find organization user by email
+    const user = await User.findOne({ 
+      email,
+      role: 'admin'
+    }).select('+password');
+  
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'No admin account found with this email'
+      });
+    }
+
+    // Check password
+    const isPasswordMatch = await user.matchPassword(password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+
+    const token = generateToken(user._id);
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Admin login successful',
+      data: {
+        token,
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+          lastLogin: user.lastLogin
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during admin login'
+    });
+  }
+};
+
 module.exports = {
   registerOrganization,
   registerStaff,
   registerStudent,
   loginStaff,
   loginStudent,
+  loginAdmin,
   loginOrganization,
   getAllOrganizations
 };
