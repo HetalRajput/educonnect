@@ -4,7 +4,8 @@ const {
   getOrganizationStaff,
   getOrganizationStudents,
   updateOrganization,
-  getOrganizationProfile
+  getOrganizationProfile,
+  saveFcmToken,
 } = require('../controllers/organizationController');
 
 const { addCourse, getCourse } = require('../controllers/courseController');
@@ -21,6 +22,7 @@ router.get('/dashboard', getOrganizationDashboard);
 router.get('/staff', getOrganizationStaff);
 router.get('/students', getOrganizationStudents);
 router.put('/profile', updateOrganization);
+router.post('/fcmtoken-save', saveFcmToken);
 
 router.post('/courseAdd', addCourse);
 router.post('/courseList', getCourse);

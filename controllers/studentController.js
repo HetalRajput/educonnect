@@ -96,8 +96,33 @@ const getStudentMessages = async (req, res) => {
   }
 };
 
+const saveFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+ 
+    const student = await Student.findByIdAndUpdate(
+      req.user._id,
+      { fcmToken },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'FCM token saved successfully',
+      data: { student }
+    });
+  } catch (error) {
+    console.error('Save FCM token error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while saving FCM token'
+    });
+  }
+};
+
 module.exports = {
   getStudentProfile,
   updateStudentProfile,
-  getStudentMessages
+  getStudentMessages,
+  saveFcmToken
 };

@@ -46,7 +46,10 @@ const staffSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
-  }
+  },
+  fcmToken: {
+    type: String,
+  },
 }, {
   timestamps: true
 });

@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect, authorize } = require('../middleware/auth');
-const { getStaffProfile, updateStaffProfile, getStaffMessages } = require('../controllers/staffController');
+const { getStaffProfile, updateStaffProfile, getStaffMessages,saveFcmToken } = require('../controllers/staffController');
 
 const router = express.Router();
 
@@ -14,5 +14,6 @@ router.put('/profile', updateStaffProfile);
 
 // Staff messages
 router.get('/messages', getStaffMessages);
+router.post('/fcmtoken-save', saveFcmToken);
 
 module.exports = router;    

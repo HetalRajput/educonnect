@@ -36,7 +36,10 @@ const organizationSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: false
-  }
+  },
+  fcmToken: {
+    type: String,
+  },
 }, {
   timestamps: true
 });

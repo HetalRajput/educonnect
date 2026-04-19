@@ -209,10 +209,38 @@ const getOrganizationProfile = async (req, res) => {
   }
 };
 
+const saveFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const organization = await Organization.findByIdAndUpdate(
+      req.user.organization._id,
+      { fcmToken },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'FCM token saved successfully',
+      data: { organization }
+    });
+
+  } catch (error) {
+    console.error('Save FCM token error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while saving FCM token'
+    });
+  }
+};
+
+
+
+
 module.exports = {
   getOrganizationDashboard,
   getOrganizationStaff,
   getOrganizationStudents,
   updateOrganization,
-  getOrganizationProfile
+  getOrganizationProfile,
+  saveFcmToken
 };
