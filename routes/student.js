@@ -1,5 +1,5 @@
 const express = require('express');
-const { getStudentProfile, updateStudentProfile, getStudentMessages,saveFcmToken } = require('../controllers/studentController');
+const { getStudentProfile, updateStudentProfile, getStudentMessages,saveFcmToken,sendStudentNotification } = require('../controllers/studentController');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -15,5 +15,5 @@ router.put('/profile', updateStudentProfile);
 // Student messages
 router.get('/messages', getStudentMessages);
 router.post('/fcmtoken-save', saveFcmToken);
-
+router.post('/send-student-notification', sendStudentNotification);
 module.exports = router;

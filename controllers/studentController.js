@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const Message = require('../models/Message');
+const admin = require("../config/firebase");
 
 // Get student profile
 const getStudentProfile = async (req, res) => {
@@ -120,9 +121,50 @@ const saveFcmToken = async (req, res) => {
   }
 };
 
+const sendStudentNotification = async (req, res) => {
+  try {
+    
+    const { studentId, title, body } = req.body;
+
+    const student = await Student.findById(studentId);
+
+    if (!student || !student.fcmToken) {
+      return res.status(404).json({
+        success: false,
+        message: "Student or FCM token not found"
+      });
+    }
+
+
+    const message = {
+      token: student.fcmToken,
+      notification: {
+        title,
+        body
+      }
+    };
+
+    const response = await admin.messaging().send(message);
+
+    res.json({
+      success: true,
+      message: "Notification sent successfully",
+      data: response
+    });
+
+  } catch (error) {
+    console.error("FCM Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error sending notification"
+    });
+  }
+};
+
 module.exports = {
   getStudentProfile,
   updateStudentProfile,
   getStudentMessages,
-  saveFcmToken
+  saveFcmToken,
+  sendStudentNotification
 };
