@@ -609,45 +609,6 @@ const loginAdmin = async (req, res) => {
 };
 
 
-const downloadStudentCSV = async (req, res) => {
-  try {
-
-    const base_url = `${req.protocol}://${req.get("host")}/`;
-
-    res.status(200).json({
-      success: true,
-      message: "CSV file available",
-      url: base_url + "uploads/student_template.csv"
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
-const downloadStaffCSV = async (req, res) => {
-  try {
-
-    const base_url = `${req.protocol}://${req.get("host")}/`;
-
-    res.status(200).json({
-      success: true,
-      message: "CSV file available",
-      url: base_url + "uploads/staff_template.csv"
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
-
 
 module.exports = {
   registerOrganization,
@@ -657,8 +618,6 @@ module.exports = {
   loginStudent,
   loginAdmin,
   loginOrganization,
-  getAllOrganizations,
-  downloadStudentCSV,
-  downloadStaffCSV
+  getAllOrganizations
 
 };

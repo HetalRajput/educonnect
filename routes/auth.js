@@ -7,9 +7,7 @@ const {
   loginStudent,
   loginOrganization,
   getAllOrganizations,
-  loginAdmin,
-  downloadStudentCSV,
-  downloadStaffCSV
+  loginAdmin
 } = require('../controllers/authController');
 const { 
   validateOrganizationRegistration, 
@@ -35,7 +33,5 @@ router.post('/login/student', loginStudent);
 router.post('/register/staff',registerStaff);
 router.post('/login/admin', loginAdmin);
 
-router.get('/download-student-csv', downloadStudentCSV);
-router.get('/download-staff-csv', downloadStaffCSV);
 
 module.exports = router;
