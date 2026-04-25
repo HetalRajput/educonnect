@@ -3,6 +3,7 @@ const Organization = require('../models/Organization');
 const Staff = require('../models/Staff');
 const Student = require('../models/Student');
 const { generateToken } = require('../utils/jwt');
+const path = require("path");
 
 // Get all organizations with ID and name (Public)
 const getAllOrganizations = async (req, res) => {
@@ -607,6 +608,47 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+
+const downloadStudentCSV = async (req, res) => {
+  try {
+
+    const base_url = `${req.protocol}://${req.get("host")}/`;
+
+    res.status(200).json({
+      success: true,
+      message: "CSV file available",
+      url: base_url + "uploads/student_template.csv"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const downloadStaffCSV = async (req, res) => {
+  try {
+
+    const base_url = `${req.protocol}://${req.get("host")}/`;
+
+    res.status(200).json({
+      success: true,
+      message: "CSV file available",
+      url: base_url + "uploads/staff_template.csv"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+
 module.exports = {
   registerOrganization,
   registerStaff,
@@ -615,5 +657,8 @@ module.exports = {
   loginStudent,
   loginAdmin,
   loginOrganization,
-  getAllOrganizations
+  getAllOrganizations,
+  downloadStudentCSV,
+  downloadStaffCSV
+
 };
