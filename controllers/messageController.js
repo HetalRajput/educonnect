@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Staff = require('../models/Staff');
 const Student = require('../models/Student');
 const admin = require("../config/firebase");
+const logger = require('../logger');
 
 const sendMessage = async (req, res) => {
   try {
@@ -75,6 +76,7 @@ const sendMessage = async (req, res) => {
       console.log("Push sent:", response.successCount);
     }
 
+
     res.status(200).json({
       success: true,
       message: "Message sent successfully",
@@ -83,7 +85,8 @@ const sendMessage = async (req, res) => {
 
   } catch (error) {
     console.error("Notification Error:", error);
-
+    logger.error(`Error in sendMessage: ${error}`);
+    
     res.status(500).json({
       success: false,
       message: error.message
