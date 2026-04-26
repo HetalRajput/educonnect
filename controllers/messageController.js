@@ -94,46 +94,7 @@ const sendMessage = async (req, res) => {
   }
 };
 
-const getStaffMessages = async (req, res) => {
-  try{
-    const { staff_id } = req.query;
-    
-    const messages = await messageModel.find({ staff_id: staff_id, userType: 'staff' }).sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: messages
-    });
-
-  } catch (error) {
-    console.error('Get messages error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching messages'
-    });
-  }
-};
-
-const getStudentMessages = async (req, res) => {
-  try{
-    const { class_id } = req.query;
-    
-    const messages = await messageModel.find({ class_id: class_id, userType: 'students' }).sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      data: messages
-    });
-
-  } catch (error) {
-    console.error('Get messages error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while fetching messages'
-    });
-  }
-};
 
 module.exports = {
-  sendMessage,
-  getStaffMessages,
-  getStudentMessages
+  sendMessage
 };

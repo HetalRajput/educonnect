@@ -1,5 +1,5 @@
 const Student = require('../models/Student');
-const Message = require('../models/Message');
+const messageModel = require('../models/Message');
 const admin = require("../config/firebase");
 
 // Get student profile
@@ -60,43 +60,47 @@ const updateStudentProfile = async (req, res) => {
 // Get student messages
 const getStudentMessages = async (req, res) => {
   try {
+
     const { page = 1, limit = 10 } = req.query;
 
-    const messages = await Message.find({
-      organization: req.user.organization._id,
-      recipients: req.user._id,
-      isActive: true
-    })
-    .populate('sender', 'email profile')
-    .sort({ createdAt: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit);
+    const organizationId = req.user.organization._id;
+    const class_id = req.user.class;
 
-    const total = await Message.countDocuments({
-      organization: req.user.organization._id,
-      recipients: req.user._id,
-      isActive: true
+    const skip = (page - 1) * limit;
+
+    const messages = await messageModel
+      .find({
+        class_id: class_id,
+        organization: organizationId
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const totalMessages = await messageModel.countDocuments({
+      class_id: class_id,
+      organization: organizationId
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      data: {
-        messages,
-        totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        total
+      data: messages,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: Math.ceil(totalMessages / limit),
+        totalMessages: totalMessages
       }
     });
 
   } catch (error) {
     console.error('Get student messages error:', error);
+
     res.status(500).json({
       success: false,
       message: 'Server error while fetching messages'
     });
   }
 };
-
 const saveFcmToken = async (req, res) => {
   try {
     const { fcmToken } = req.body;

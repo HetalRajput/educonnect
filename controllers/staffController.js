@@ -1,5 +1,5 @@
 const Staff = require('../models/Staff');
-const Message = require('../models/Message');
+const messageModel = require('../models/Message');
 
 // Get staff profile
 const getStaffProfile = async (req, res) => {
@@ -62,39 +62,50 @@ const updateStaffProfile = async (req, res) => {
 // Get staff messages
 const getStaffMessages = async (req, res) => {
   try {
+
     const { page = 1, limit = 10 } = req.query;
 
-    const messages = await Message.find({
-      organization: req.user.organization._id,
-      recipients: req.user._id,
-      isActive: true
-    })
-    .populate('sender', 'email profile')
-    .sort({ createdAt: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit);
+    const staffId = req.user._id.toString();
+    const organizationId = req.user.organization._id;
 
-    const total = await Message.countDocuments({
-      organization: req.user.organization._id,
-      recipients: req.user._id,
-      isActive: true
+    const messages = await messageModel.find({
+      organization: organizationId,
+      userType: "staff",
+      $or: [
+        { staff_id: "all" },
+        { staff_id: { $regex: staffId } }
+      ]
+    })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+    const total = await messageModel.countDocuments({
+      organization: organizationId,
+      userType: "staff",
+      $or: [
+        { staff_id: "all" },
+        { staff_id: { $regex: staffId } }
+      ]
     });
 
-    res.json({
+    res.status(200).json({
       success: true,
-      data: {
-        messages,
+      message: "Staff messages fetched successfully",
+      data: messages,
+      pagination: {
+        currentPage: Number(page),
         totalPages: Math.ceil(total / limit),
-        currentPage: page,
-        total
+        totalMessages: total
       }
     });
 
   } catch (error) {
-    console.error('Get staff messages error:', error);
+    console.error("Get staff messages error:", error);
+
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching messages'
+      message: "Server error while fetching messages"
     });
   }
 };
