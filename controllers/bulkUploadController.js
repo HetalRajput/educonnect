@@ -45,8 +45,9 @@ const downloadStaffCSV = async (req, res) => {
 };
 
 const uploadStudentCSV = async (req, res) => {
-
   try {
+
+    const organizationId = req.user.organization._id; // get from token
 
     const results = [];
 
@@ -58,12 +59,10 @@ const uploadStudentCSV = async (req, res) => {
         let inserted = 0;
         let duplicateStudents = 0;
         let duplicateMobile = 0;
-        let invalidOrganization = 0;
 
         for (let row of results) {
 
           const {
-            organizationId,
             name,
             fatherName,
             class: studentClass,
@@ -71,14 +70,6 @@ const uploadStudentCSV = async (req, res) => {
             session,
             mobileNumber
           } = row;
-
-          // check organization
-          const organization = await Organization.findById(organizationId);
-
-          if (!organization) {
-            invalidOrganization++;
-            continue;
-          }
 
           // check duplicate student
           const existingStudent = await Student.findOne({
@@ -118,8 +109,7 @@ const uploadStudentCSV = async (req, res) => {
           message: "Student CSV processed",
           inserted,
           duplicateStudents,
-          duplicateMobile,
-          invalidOrganization
+          duplicateMobile
         });
 
       });
@@ -132,13 +122,14 @@ const uploadStudentCSV = async (req, res) => {
     });
 
   }
-
 };
 
 
 const uploadStaffCSV = async (req, res) => {
 
   try {
+
+    const organizationId = req.user.organization._id; // get from token
 
     const results = [];
 
@@ -150,25 +141,16 @@ const uploadStaffCSV = async (req, res) => {
         let inserted = 0;
         let duplicateMobile = 0;
         let duplicateEmail = 0;
-        let invalidOrganization = 0;
 
         for (let row of results) {
 
           const {
-            org_id,
             mobile_no,
             email,
             fName,
             department,
             designation
           } = row;
-
-          const organization = await Organization.findById(org_id);
-
-          if (!organization) {
-            invalidOrganization++;
-            continue;
-          }
 
           const existingMobile = await Staff.findOne({ mobile_no });
 
@@ -187,7 +169,7 @@ const uploadStaffCSV = async (req, res) => {
           }
 
           await Staff.create({
-            organization: org_id,
+            organization: organizationId,
             mobile_no,
             email: email.toLowerCase().trim(),
             fName,
@@ -203,8 +185,7 @@ const uploadStaffCSV = async (req, res) => {
           message: "Staff CSV processed",
           inserted,
           duplicateMobile,
-          duplicateEmail,
-          invalidOrganization
+          duplicateEmail
         });
 
       });

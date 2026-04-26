@@ -6,9 +6,13 @@ const {
   uploadStudentCSV,
   uploadStaffCSV
 } = require('../controllers/bulkUploadController');
-
-
+const { protect, authorize } = require('../middleware/auth');
 const router = express.Router();
+
+router.use(protect);
+router.use(authorize('organization'));
+
+
 
 // Public routes
 
